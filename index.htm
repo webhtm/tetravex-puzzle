@@ -32,7 +32,7 @@
             overflow: hidden;
         }
 
-        /* --- 1. Top Bar --- */
+        /* --- Header --- */
         #top-bar {
             height: 55px;
             background: var(--header-bg);
@@ -98,14 +98,14 @@
             #top-bar { padding: 0 25px; overflow-x: visible; }
         }
 
-        /* --- 2. Sub-Bar (Controls) --- */
+        /* --- Controls Bar --- */
         #sub-bar {
             height: 50px;
             background: rgba(255,255,255,0.03);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             flex-shrink: 0;
             border-bottom: 1px solid #333;
         }
@@ -118,6 +118,9 @@
         }
         .btn-round:active { background: #444; transform: scale(0.9); }
 
+        .btn-hint { color: #ffd700; border-color: #ffd700; }
+        .btn-hint:active { background: rgba(255, 215, 0, 0.1); }
+
         .btn-solve-round {
             background: var(--slot-bg); color: var(--accent); border: 1px solid var(--accent);
             padding: 0 15px; border-radius: 20px; height: 38px;
@@ -125,7 +128,7 @@
         }
         .btn-solve-round:active { background: rgba(79, 195, 247, 0.1); }
 
-        /* --- 3. Game Area --- */
+        /* --- Game Area --- */
         #game-area {
             flex: 1; display: flex; padding: 5px 10px;
             justify-content: center; align-items: center;
@@ -162,7 +165,6 @@
         .grid { display: grid; gap: 2px; border: 2px solid #333; padding: 2px; background: #1a1a1a; }
         .slot { background-color: var(--slot-bg); position: relative; transition: background 0.2s; }
         
-        /* Tap Selection Highlight */
         .slot.selected-slot { background-color: rgba(255, 238, 88, 0.2); box-shadow: inset 0 0 0 2px var(--highlight); }
 
         .tile {
@@ -252,6 +254,10 @@
     <button class="btn-round" onclick="redo()" title="Redo">
         <i class="fa-solid fa-rotate-right"></i>
     </button>
+    <button class="btn-round btn-hint" onclick="giveHint()" title="Hint">
+        <i class="fa-solid fa-lightbulb"></i>
+    </button>
+    
     <button class="btn-solve-round" onclick="autoSolve()" title="Auto Solve">
         <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="btn-text">Solve</span>
     </button>
@@ -292,10 +298,11 @@
     // Interaction State
     let dragSrcSlot = null, dragEl = null, dragOffset = {x:0, y:0};
     let isDragging = false;
-    let selectedSlot = null; // For Tap-to-Place
+    let selectedSlot = null;
 
     let timerInt = null, startTime = 0, elapsedPaused = 0, pauseStartTime = 0;
     let isPaused = false, isAutoSolved = false, gameActive = false;
+    let hasUsedHint = false; // Tracks if hint was used
 
     // --- DOM ---
     const boardGrid = document.getElementById('board-grid');
@@ -329,6 +336,7 @@
         winModal.style.display = 'none';
         pauseModal.style.display = 'none';
         isAutoSolved = false; isPaused = false; gameActive = true;
+        hasUsedHint = false;
         selectedSlot = null; isDragging = false;
         
         moveHistory = []; redoStack = [];
@@ -389,6 +397,70 @@
         loadState(redoStack.pop());
         deselectSlot();
     }
+    
+    // --- Hint Logic ---
+    function giveHint() {
+        if(!gameActive || isPaused) return;
+        hasUsedHint = true;
+
+        // 1. First, check if any tile on Board is INCORRECT (wrong global spot).
+        const incorrectSlot = slots.find(s => 
+            s.type === 'board' && 
+            s.content !== null && 
+            s.index !== s.content.correctSlot
+        );
+
+        // If found, Move it back to Deck
+        if (incorrectSlot) {
+            const emptyDeckSlot = slots.find(s => s.type === 'deck' && s.content === null);
+            if(emptyDeckSlot) {
+                saveState();
+                swapSlots(incorrectSlot, emptyDeckSlot);
+                flashSlot(emptyDeckSlot, '#ef5350');
+                showToast("Fixing incorrect tile...");
+            }
+            return;
+        }
+
+        // 2. If board is clean, find a Valid Move (Deck -> Board)
+        const validHint = tiles.find(t => {
+            const currentSlot = slots.find(s => s.content === t);
+            if(currentSlot.type === 'board') return false; // Already correct
+
+            const targetSlot = slots.find(s => s.index === t.correctSlot && s.type === 'board');
+            if(targetSlot.content !== null) return false; // Should be empty if logic holds
+
+            return validateMove(t, targetSlot);
+        });
+
+        if (validHint) {
+            const currentSlot = slots.find(s => s.content === validHint);
+            const targetSlot = slots.find(s => s.index === validHint.correctSlot && s.type === 'board');
+            
+            saveState();
+            swapSlots(currentSlot, targetSlot);
+            flashSlot(targetSlot, '#00e676');
+            redoStack = []; 
+            checkWin(); 
+        } else {
+            showToast("No legal moves available.");
+        }
+    }
+
+    function flashSlot(slot, color) {
+        const tileEl = slot.dom.querySelector('.tile');
+        if(tileEl) {
+            tileEl.style.transition = 'box-shadow 0.5s';
+            tileEl.style.boxShadow = `inset 0 0 0 4px ${color}`;
+            setTimeout(() => { tileEl.style.boxShadow = ''; tileEl.style.transition = ''; }, 600);
+        }
+    }
+
+    function showToast(msg) {
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
 
     // --- Core Logic ---
     function generatePuzzle() {
@@ -442,11 +514,8 @@
             const el = document.createElement('div');
             el.className = 'slot';
             if(selectedSlot === slot) el.classList.add('selected-slot');
-            
-            // Unified Input Handling
             el.addEventListener('mousedown', (e) => handleStart(e, slot));
             el.addEventListener('touchstart', (e) => handleStart(e, slot), {passive: false});
-            
             el.dataset.slotIdx = slots.indexOf(slot);
             if (slot.content) el.appendChild(createTileDOM(slot.content));
             if (slot.type === 'board') boardGrid.appendChild(el);
@@ -466,35 +535,25 @@
             <div class="val v-btm n${tileObj.vals[2]}">${tileObj.vals[2]}</div>
             <div class="val v-lft n${tileObj.vals[3]}">${tileObj.vals[3]}</div>
         `;
-        // Tile doesn't need its own handler, bubbling to slot is fine, but we disable pointer events for clean bubbling? 
-        // No, drag needs target. Let it propagate.
         return div;
     }
 
-    // --- Unified Input Handling (Tap & Drag) ---
+    // --- Input Handling ---
     let startX = 0, startY = 0;
 
     function handleStart(e, slot) {
         if(!gameActive || isPaused) return;
         const touch = e.touches ? e.touches[0] : e;
-        
-        // Don't preventDefault yet, to allow Clicks if it's just a tap.
-        // But if it's a touch, we might want to prevent scrolling.
         if (e.touches) e.preventDefault(); 
-        
-        dragSrcSlot = slot;
-        isDragging = false;
-        startX = touch.clientX;
-        startY = touch.clientY;
+        dragSrcSlot = slot; isDragging = false;
+        startX = touch.clientX; startY = touch.clientY;
 
         const tileEl = slot.dom.querySelector('.tile');
         if (!tileEl) {
-            // Empty slot clicked/touched -> Handle as Tap Target immediately if we have a selection
             if (selectedSlot) handleTap(slot);
             return;
         }
 
-        // Prepare Drag Ghost
         dragEl = tileEl.cloneNode(true);
         dragEl.classList.add('dragging');
         dragEl.style.width = tileEl.offsetWidth + 'px';
@@ -517,14 +576,12 @@
         const dx = Math.abs(touch.clientX - startX);
         const dy = Math.abs(touch.clientY - startY);
 
-        // Threshold to treat as Drag
         if (!isDragging && (dx > 5 || dy > 5)) {
             isDragging = true;
             document.body.appendChild(dragEl);
             if(dragSrcSlot.dom.querySelector('.tile')) {
                 dragSrcSlot.dom.querySelector('.tile').style.opacity = '0';
             }
-            // Deselect on drag start to avoid visual confusion
             deselectSlot();
         }
 
@@ -537,15 +594,12 @@
 
     function handleEnd(e) {
         const touch = e.changedTouches ? e.changedTouches[0] : e;
-        
-        // Clean listeners
         document.removeEventListener('touchmove', handleMove);
         document.removeEventListener('touchend', handleEnd);
         document.removeEventListener('mousemove', handleMove);
         document.removeEventListener('mouseup', handleEnd);
 
         if (isDragging) {
-            // --- Drag Drop Logic ---
             dragEl.style.display = 'none';
             let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
             dragEl.style.display = 'block';
@@ -556,7 +610,6 @@
                 if (targetDom) targetSlot = slots[parseInt(targetDom.dataset.slotIdx)];
             }
 
-            // Cleanup Ghost
             dragEl.remove(); dragEl = null;
             const orig = dragSrcSlot.dom.querySelector('.tile');
             if(orig) orig.style.opacity = '1';
@@ -565,32 +618,22 @@
                 attemptMove(dragSrcSlot, targetSlot);
             }
         } else {
-            // --- Tap Logic ---
-            // Cleanup unused ghost (it was never appended if !isDragging, but just in case)
             if(dragEl && dragEl.parentNode) dragEl.remove();
             dragEl = null;
-            
             handleTap(dragSrcSlot);
         }
-        
-        isDragging = false;
-        dragSrcSlot = null;
+        isDragging = false; dragSrcSlot = null;
     }
 
     function handleTap(slot) {
-        // 1. No selection -> Select
         if (!selectedSlot) {
             if (slot.content) selectSlot(slot);
             return;
         }
-
-        // 2. Tap self -> Deselect
         if (selectedSlot === slot) {
             deselectSlot();
             return;
         }
-
-        // 3. Tap other -> Move
         attemptMove(selectedSlot, slot);
     }
 
@@ -610,7 +653,7 @@
         selectedSlot = null;
     }
 
-    // --- Game Logic ---
+    // --- Move Validation ---
     function attemptMove(fromSlot, toSlot) {
         let success = false;
         if (toSlot.type === 'deck') {
@@ -667,7 +710,7 @@
             target.content = t;
         });
         renderSlots();
-        toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2000);
+        showToast("Solved.");
         gameActive = false; clearInterval(timerInt);
     }
 
@@ -675,8 +718,21 @@
         if(isAutoSolved) return;
         const boardSlots = slots.filter(s => s.type === 'board');
         if (boardSlots.every(s => s.content !== null)) {
-            gameActive = false; clearInterval(timerInt); winCount++;
-            document.getElementById('win-count').innerText = "W: " + winCount;
+            gameActive = false; 
+            clearInterval(timerInt);
+            
+            if (hasUsedHint) {
+                 // Assisted Win (No count increment)
+                 document.querySelector('#win-modal h1').innerText = "SOLVED";
+                 document.querySelector('#win-modal h1').style.color = "#4fc3f7";
+            } else {
+                 // True Win
+                 winCount++;
+                 document.getElementById('win-count').innerText = "W: " + winCount;
+                 document.querySelector('#win-modal h1').innerText = "VICTORY!";
+                 document.querySelector('#win-modal h1').style.color = "#66bb6a";
+            }
+            
             document.getElementById('final-time').innerText = "Time: " + document.getElementById('timer').innerText;
             winModal.style.display = 'flex';
         }
