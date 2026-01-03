@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tetravex Logic Puzzle</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #121212;
+            --header-bg: #1f1f1f;
+            --slot-bg: #2a2a2a;
+            --tile-bg: #333;
+            --text-main: #eee;
+            --accent: #4fc3f7;
+            --highlight: #ffee58;
+            --danger: #ef5350;
+            --success: #66bb6a;
+            --tile-font: 14px; 
+        }
+
+        * { box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- 1. Top Bar --- */
+        #top-bar {
+            height: 55px;
+            background: var(--header-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 100;
+            flex-shrink: 0;
+            gap: 10px;
+            overflow-x: auto; 
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+        #top-bar::-webkit-scrollbar { display: none; }
+
+        .bar-group { display: flex; align-items: center; gap: 8px; }
+
+        .game-title {
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: var(--accent);
+            display: none;
+        }
+        @media(min-width: 900px) { .game-title { display: block; margin-right: 15px; } }
+
+        .stat-box {
+            font-family: monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border: 1px solid #444;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        select {
+            background: var(--slot-bg);
+            color: white;
+            border: 1px solid #444;
+            padding: 6px 4px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        button {
+            border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold;
+            cursor: pointer; font-size: 0.85rem; display: flex; align-items: center;
+            gap: 6px; transition: background 0.2s, transform 0.1s; white-space: nowrap;
+        }
+        button:active { transform: scale(0.95); }
+
+        .btn-new { background: var(--accent); color: #000; }
+        .btn-pause { background: #ff9800; color: #000; }
+        
+        .btn-text { display: none; }
+        @media (min-width: 768px) { 
+            .btn-text { display: inline; } 
+            #top-bar { padding: 0 25px; overflow-x: visible; }
+        }
+
+        /* --- 2. Sub-Bar (Controls) --- */
+        #sub-bar {
+            height: 50px;
+            background: rgba(255,255,255,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .btn-round {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #2a2a2a; color: #eee; border: 1px solid #555;
+            font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex; justify-content: center; align-items: center; padding: 0;
+        }
+        .btn-round:active { background: #444; transform: scale(0.9); }
+
+        .btn-solve-round {
+            background: var(--slot-bg); color: var(--accent); border: 1px solid var(--accent);
+            padding: 0 15px; border-radius: 20px; height: 38px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-solve-round:active { background: rgba(79, 195, 247, 0.1); }
+
+        /* --- 3. Game Area --- */
+        #game-area {
+            flex: 1; display: flex; padding: 5px 10px;
+            justify-content: center; align-items: center;
+            width: 100%; height: calc(100vh - 105px); position: relative;
+        }
+
+        @media (max-width: 799px) {
+            #game-area { flex-direction: column; gap: 5px; justify-content: space-evenly; }
+            .grid-container {
+                display: flex; flex-direction: row; align-items: center; justify-content: center;
+                background: rgba(255,255,255,0.02); border-radius: 8px; padding: 4px;
+            }
+            .label-text {
+                writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);
+                font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 2px;
+                padding: 10px 4px; border-left: 1px solid #333; margin-left: 6px;
+            }
+        }
+
+        @media (min-width: 800px) {
+            #game-area { flex-direction: row; gap: 40px; }
+            .grid-container {
+                display: flex; flex-direction: column; align-items: center;
+                background: rgba(255,255,255,0.02); border-radius: 12px; padding: 20px;
+            }
+            .label-text {
+                writing-mode: horizontal-tb; transform: none; font-size: 1.1rem; color: #aaa;
+                text-transform: uppercase; letter-spacing: 3px; margin-bottom: 15px;
+                border: none; width: 100%; text-align: center; border-bottom: 2px solid #333; padding-bottom: 5px;
+            }
+        }
+
+        /* --- Grid & Tiles --- */
+        .grid { display: grid; gap: 2px; border: 2px solid #333; padding: 2px; background: #1a1a1a; }
+        .slot { background-color: var(--slot-bg); position: relative; transition: background 0.2s; }
+        
+        /* Tap Selection Highlight */
+        .slot.selected-slot { background-color: rgba(255, 238, 88, 0.2); box-shadow: inset 0 0 0 2px var(--highlight); }
+
+        .tile {
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+            background: var(--tile-bg); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+            cursor: pointer; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+            z-index: 10;
+        }
+
+        .tile.dragging {
+            opacity: 0.9; z-index: 9999; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            transform: scale(1.1); position: fixed; pointer-events: none; 
+        }
+
+        .tile.selected-tile { box-shadow: inset 0 0 0 3px var(--highlight); transform: scale(0.96); }
+
+        @keyframes shake {
+            0% { transform: translateX(0); } 25% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); } 75% { transform: translateX(-4px); }
+            100% { transform: translateX(0); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
+
+        .val {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-family: 'Courier New', monospace;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
+            font-size: var(--tile-font); 
+        }
+        
+        .v-top { top: -26%; left: 0; } .v-btm { bottom: -26%; left: 0; }
+        .v-lft { top: 0; left: -26%; } .v-rgt { top: 0; right: -26%; }
+
+        .x-lines { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+        .x-lines::before, .x-lines::after {
+            content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px;
+            background: rgba(255,255,255,0.08);
+        }
+        .x-lines::before { transform: rotate(45deg); }
+        .x-lines::after { transform: rotate(-45deg); }
+
+        .n0 { color: #90A4AE; } .n1 { color: #42A5F5; } .n2 { color: #66BB6A; }
+        .n3 { color: #FFEE58; } .n4 { color: #AB47BC; } .n5 { color: #EF5350; }
+        .n6 { color: #26C6DA; } .n7 { color: #FFA726; } .n8 { color: #EC407A; }
+        .n9 { color: #8D6E63; }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: none; justify-content: center;
+            align-items: center; flex-direction: column; z-index: 2000; backdrop-filter: blur(5px);
+        }
+        .modal h1 { font-size: 2.5rem; margin-bottom: 10px; color: var(--text-main); }
+        .modal p { color: #aaa; margin-bottom: 20px; }
+
+        #toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: #fff; color: #000; padding: 10px 20px; border-radius: 20px;
+            font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 5000;
+        }
+        #toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div id="top-bar">
+    <div class="bar-group">
+        <div class="game-title">TETRAVEX</div>
+        <select id="diff-select" onchange="startNewGame()"></select>
+        <button class="btn-new" onclick="startNewGame()" title="New Game">
+            <i class="fa-solid fa-rotate-right"></i> <span class="btn-text">New Game</span>
+        </button>
+    </div>
+    <div class="bar-group">
+        <button class="btn-pause" onclick="togglePause()" title="Pause">
+            <i class="fa-solid fa-pause"></i> <span class="btn-text">Pause</span>
+        </button>
+        <div class="stat-box" id="win-count" title="Wins">W: 0</div>
+        <div class="stat-box" id="timer">00:00</div>
+    </div>
+</div>
+
+<div id="sub-bar">
+    <button class="btn-round" onclick="undo()" title="Undo">
+        <i class="fa-solid fa-rotate-left"></i>
+    </button>
+    <button class="btn-round" onclick="redo()" title="Redo">
+        <i class="fa-solid fa-rotate-right"></i>
+    </button>
+    <button class="btn-solve-round" onclick="autoSolve()" title="Auto Solve">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="btn-text">Solve</span>
+    </button>
+</div>
+
+<div id="game-area">
+    <div class="grid-container">
+        <div class="label-text">Board</div>
+        <div id="board-grid" class="grid"></div>
+    </div>
+    
+    <div class="grid-container">
+        <div class="label-text">Deck</div>
+        <div id="deck-grid" class="grid"></div>
+    </div>
+</div>
+
+<div id="toast">Solved.</div>
+
+<div id="win-modal" class="modal">
+    <h1 style="color: var(--success);">VICTORY!</h1>
+    <p id="final-time">Time: 00:00</p>
+    <button class="btn-new" onclick="startNewGame()" style="font-size: 1.2rem; padding: 15px 30px;">Play Again</button>
+</div>
+
+<div id="pause-modal" class="modal">
+    <h1>PAUSED</h1>
+    <button class="btn-new" onclick="togglePause()" style="font-size: 1.2rem; padding: 15px 30px; background: #ff9800;">Resume</button>
+</div>
+
+<script>
+    // --- State ---
+    let gridSize = 3;
+    let tiles = [], slots = [];
+    let winCount = 0;
+    let moveHistory = [], redoStack = [];
+
+    // Interaction State
+    let dragSrcSlot = null, dragEl = null, dragOffset = {x:0, y:0};
+    let isDragging = false;
+    let selectedSlot = null; // For Tap-to-Place
+
+    let timerInt = null, startTime = 0, elapsedPaused = 0, pauseStartTime = 0;
+    let isPaused = false, isAutoSolved = false, gameActive = false;
+
+    // --- DOM ---
+    const boardGrid = document.getElementById('board-grid');
+    const deckGrid = document.getElementById('deck-grid');
+    const winModal = document.getElementById('win-modal');
+    const pauseModal = document.getElementById('pause-modal');
+    const diffSelect = document.getElementById('diff-select');
+    const toast = document.getElementById('toast');
+
+    // --- Init ---
+    function updateDropdownLabels() {
+        const isDesktop = window.innerWidth >= 768;
+        const val = diffSelect.value || "3";
+        const opts = [
+            { v: "2", l: isDesktop ? "2x2 (Tiny)" : "2x2" },
+            { v: "3", l: isDesktop ? "3x3 (Normal)" : "3x3" },
+            { v: "4", l: isDesktop ? "4x4 (Hard)" : "4x4" },
+            { v: "5", l: isDesktop ? "5x5 (Expert)" : "5x5" }
+        ];
+        diffSelect.innerHTML = '';
+        opts.forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o.v; opt.innerText = o.l;
+            if(o.v === val) opt.selected = true;
+            diffSelect.appendChild(opt);
+        });
+    }
+
+    function startNewGame() {
+        gridSize = parseInt(diffSelect.value);
+        winModal.style.display = 'none';
+        pauseModal.style.display = 'none';
+        isAutoSolved = false; isPaused = false; gameActive = true;
+        selectedSlot = null; isDragging = false;
+        
+        moveHistory = []; redoStack = [];
+        generatePuzzle();
+        calculateLayout();
+        renderSlots();
+        
+        clearInterval(timerInt);
+        startTime = Date.now(); elapsedPaused = 0;
+        document.getElementById('timer').innerText = "00:00";
+        timerInt = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+        if(!gameActive || isPaused) return;
+        let delta = Date.now() - startTime - elapsedPaused;
+        let s = Math.floor(delta/1000);
+        let m = Math.floor(s/60).toString().padStart(2,'0');
+        s = (s%60).toString().padStart(2,'0');
+        document.getElementById('timer').innerText = `${m}:${s}`;
+    }
+
+    function togglePause() {
+        if(!gameActive) return;
+        isPaused = !isPaused;
+        if(isPaused) {
+            pauseStartTime = Date.now();
+            pauseModal.style.display = 'flex';
+        } else {
+            elapsedPaused += (Date.now() - pauseStartTime);
+            pauseModal.style.display = 'none';
+        }
+    }
+
+    // --- History ---
+    function saveState() {
+        const snapshot = slots.map(s => s.content ? s.content.id : null);
+        moveHistory.push(snapshot);
+        if(moveHistory.length > 50) moveHistory.shift();
+    }
+    function loadState(snapshot) {
+        snapshot.forEach((tileId, index) => {
+            const slot = slots[index];
+            if (tileId === null) slot.content = null;
+            else slot.content = tiles.find(t => t.id === tileId);
+        });
+        renderSlots();
+    }
+    function undo() {
+        if (!gameActive || isPaused || moveHistory.length === 0) return;
+        redoStack.push(slots.map(s => s.content ? s.content.id : null));
+        loadState(moveHistory.pop());
+        deselectSlot();
+    }
+    function redo() {
+        if (!gameActive || isPaused || redoStack.length === 0) return;
+        moveHistory.push(slots.map(s => s.content ? s.content.id : null));
+        loadState(redoStack.pop());
+        deselectSlot();
+    }
+
+    // --- Core Logic ---
+    function generatePuzzle() {
+        tiles = [];
+        const total = gridSize * gridSize;
+        let solvedMap = new Array(total).fill(null).map(() => ({}));
+        for(let y=0; y<gridSize; y++) {
+            for(let x=0; x<gridSize; x++) {
+                let idx = y * gridSize + x;
+                let t = solvedMap[idx];
+                t.top = (y > 0) ? solvedMap[(y-1)*gridSize + x].bottom : rInt(10);
+                t.left = (x > 0) ? solvedMap[y*gridSize + (x-1)].right : rInt(10);
+                t.bottom = rInt(10); t.right = rInt(10);
+                tiles.push({ id: idx, vals: [t.top, t.right, t.bottom, t.left], correctSlot: idx });
+            }
+        }
+        let shuffled = [...tiles];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        slots = [];
+        for(let i=0; i<total; i++) slots.push({ id: `b-${i}`, type: 'board', x: i%gridSize, y: Math.floor(i/gridSize), index: i, content: null });
+        for(let i=0; i<total; i++) slots.push({ id: `d-${i}`, type: 'deck', index: i, content: shuffled[i] });
+    }
+    function rInt(max) { return Math.floor(Math.random() * max); }
+
+    // --- Rendering ---
+    function calculateLayout() {
+        const isMobile = window.innerWidth < 800;
+        const availH = window.innerHeight - 105; 
+        const availW = window.innerWidth - 20;
+        let boxSize; 
+        if (isMobile) {
+            let hPer = (availH / 2) - 20; 
+            let wPer = availW - 30;
+            boxSize = Math.floor(Math.min(hPer/gridSize, wPer/gridSize, 80));
+        } else {
+            let hPer = availH;
+            let wPer = (availW / 2) - 40;
+            boxSize = Math.floor(Math.min(hPer/gridSize, wPer/gridSize, 100));
+        }
+        document.documentElement.style.setProperty('--tile-font', (boxSize * 0.25) + 'px');
+        const css = `grid-template-columns: repeat(${gridSize}, ${boxSize}px); grid-template-rows: repeat(${gridSize}, ${boxSize}px); width: ${gridSize * boxSize + (gridSize*2)}px;`;
+        boardGrid.style.cssText = css; deckGrid.style.cssText = css;
+    }
+
+    function renderSlots() {
+        boardGrid.innerHTML = ''; deckGrid.innerHTML = '';
+        slots.forEach(slot => {
+            const el = document.createElement('div');
+            el.className = 'slot';
+            if(selectedSlot === slot) el.classList.add('selected-slot');
+            
+            // Unified Input Handling
+            el.addEventListener('mousedown', (e) => handleStart(e, slot));
+            el.addEventListener('touchstart', (e) => handleStart(e, slot), {passive: false});
+            
+            el.dataset.slotIdx = slots.indexOf(slot);
+            if (slot.content) el.appendChild(createTileDOM(slot.content));
+            if (slot.type === 'board') boardGrid.appendChild(el);
+            else deckGrid.appendChild(el);
+            slot.dom = el;
+        });
+    }
+
+    function createTileDOM(tileObj) {
+        const div = document.createElement('div');
+        div.className = 'tile';
+        if(selectedSlot && selectedSlot.content === tileObj) div.classList.add('selected-tile');
+        div.innerHTML = `
+            <div class="x-lines"></div>
+            <div class="val v-top n${tileObj.vals[0]}">${tileObj.vals[0]}</div>
+            <div class="val v-rgt n${tileObj.vals[1]}">${tileObj.vals[1]}</div>
+            <div class="val v-btm n${tileObj.vals[2]}">${tileObj.vals[2]}</div>
+            <div class="val v-lft n${tileObj.vals[3]}">${tileObj.vals[3]}</div>
+        `;
+        // Tile doesn't need its own handler, bubbling to slot is fine, but we disable pointer events for clean bubbling? 
+        // No, drag needs target. Let it propagate.
+        return div;
+    }
+
+    // --- Unified Input Handling (Tap & Drag) ---
+    let startX = 0, startY = 0;
+
+    function handleStart(e, slot) {
+        if(!gameActive || isPaused) return;
+        const touch = e.touches ? e.touches[0] : e;
+        
+        // Don't preventDefault yet, to allow Clicks if it's just a tap.
+        // But if it's a touch, we might want to prevent scrolling.
+        if (e.touches) e.preventDefault(); 
+        
+        dragSrcSlot = slot;
+        isDragging = false;
+        startX = touch.clientX;
+        startY = touch.clientY;
+
+        const tileEl = slot.dom.querySelector('.tile');
+        if (!tileEl) {
+            // Empty slot clicked/touched -> Handle as Tap Target immediately if we have a selection
+            if (selectedSlot) handleTap(slot);
+            return;
+        }
+
+        // Prepare Drag Ghost
+        dragEl = tileEl.cloneNode(true);
+        dragEl.classList.add('dragging');
+        dragEl.style.width = tileEl.offsetWidth + 'px';
+        dragEl.style.height = tileEl.offsetHeight + 'px';
+        const rect = tileEl.getBoundingClientRect();
+        dragOffset.x = touch.clientX - rect.left;
+        dragOffset.y = touch.clientY - rect.top;
+
+        if (e.touches) {
+            document.addEventListener('touchmove', handleMove, {passive: false});
+            document.addEventListener('touchend', handleEnd);
+        } else {
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', handleEnd);
+        }
+    }
+
+    function handleMove(e) {
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = Math.abs(touch.clientX - startX);
+        const dy = Math.abs(touch.clientY - startY);
+
+        // Threshold to treat as Drag
+        if (!isDragging && (dx > 5 || dy > 5)) {
+            isDragging = true;
+            document.body.appendChild(dragEl);
+            if(dragSrcSlot.dom.querySelector('.tile')) {
+                dragSrcSlot.dom.querySelector('.tile').style.opacity = '0';
+            }
+            // Deselect on drag start to avoid visual confusion
+            deselectSlot();
+        }
+
+        if (isDragging) {
+            e.preventDefault();
+            dragEl.style.left = (touch.clientX - dragOffset.x) + 'px';
+            dragEl.style.top = (touch.clientY - dragOffset.y) + 'px';
+        }
+    }
+
+    function handleEnd(e) {
+        const touch = e.changedTouches ? e.changedTouches[0] : e;
+        
+        // Clean listeners
+        document.removeEventListener('touchmove', handleMove);
+        document.removeEventListener('touchend', handleEnd);
+        document.removeEventListener('mousemove', handleMove);
+        document.removeEventListener('mouseup', handleEnd);
+
+        if (isDragging) {
+            // --- Drag Drop Logic ---
+            dragEl.style.display = 'none';
+            let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            dragEl.style.display = 'block';
+
+            let targetSlot = null;
+            if (elemBelow) {
+                const targetDom = elemBelow.closest('.slot');
+                if (targetDom) targetSlot = slots[parseInt(targetDom.dataset.slotIdx)];
+            }
+
+            // Cleanup Ghost
+            dragEl.remove(); dragEl = null;
+            const orig = dragSrcSlot.dom.querySelector('.tile');
+            if(orig) orig.style.opacity = '1';
+
+            if (targetSlot && targetSlot !== dragSrcSlot) {
+                attemptMove(dragSrcSlot, targetSlot);
+            }
+        } else {
+            // --- Tap Logic ---
+            // Cleanup unused ghost (it was never appended if !isDragging, but just in case)
+            if(dragEl && dragEl.parentNode) dragEl.remove();
+            dragEl = null;
+            
+            handleTap(dragSrcSlot);
+        }
+        
+        isDragging = false;
+        dragSrcSlot = null;
+    }
+
+    function handleTap(slot) {
+        // 1. No selection -> Select
+        if (!selectedSlot) {
+            if (slot.content) selectSlot(slot);
+            return;
+        }
+
+        // 2. Tap self -> Deselect
+        if (selectedSlot === slot) {
+            deselectSlot();
+            return;
+        }
+
+        // 3. Tap other -> Move
+        attemptMove(selectedSlot, slot);
+    }
+
+    function selectSlot(slot) {
+        if(selectedSlot) deselectSlot();
+        selectedSlot = slot;
+        slot.dom.classList.add('selected-slot');
+        const tile = slot.dom.querySelector('.tile');
+        if(tile) tile.classList.add('selected-tile');
+    }
+
+    function deselectSlot() {
+        if(!selectedSlot) return;
+        selectedSlot.dom.classList.remove('selected-slot');
+        const tile = selectedSlot.dom.querySelector('.tile');
+        if(tile) tile.classList.remove('selected-tile');
+        selectedSlot = null;
+    }
+
+    // --- Game Logic ---
+    function attemptMove(fromSlot, toSlot) {
+        let success = false;
+        if (toSlot.type === 'deck') {
+            saveState(); swapSlots(fromSlot, toSlot); success = true;
+        } else {
+            if (validateMove(fromSlot.content, toSlot)) {
+                saveState(); swapSlots(fromSlot, toSlot); success = true;
+            }
+        }
+        if (success) {
+            redoStack = []; deselectSlot(); checkWin();
+        } else {
+            const tile = fromSlot.dom.querySelector('.tile');
+            if(tile) {
+                tile.classList.add('shake');
+                setTimeout(()=> tile.classList.remove('shake'), 300);
+            }
+        }
+    }
+
+    function validateMove(tileContent, targetSlot) {
+        if(!tileContent) return true;
+        const nTop = getNeighbor(targetSlot, 0, -1);
+        const nBot = getNeighbor(targetSlot, 0, 1);
+        const nLeft = getNeighbor(targetSlot, -1, 0);
+        const nRight = getNeighbor(targetSlot, 1, 0);
+
+        if (nTop && nTop.content && nTop.content.vals[2] !== tileContent.vals[0]) return false;
+        if (nBot && nBot.content && nBot.content.vals[0] !== tileContent.vals[2]) return false;
+        if (nLeft && nLeft.content && nLeft.content.vals[1] !== tileContent.vals[3]) return false;
+        if (nRight && nRight.content && nRight.content.vals[3] !== tileContent.vals[1]) return false;
+        return true;
+    }
+
+    function getNeighbor(slot, dx, dy) {
+        if(slot.type !== 'board') return null;
+        const nx = slot.x + dx; const ny = slot.y + dy;
+        if(nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize) return null;
+        return slots.find(s => s.type === 'board' && s.x === nx && s.y === ny);
+    }
+
+    function swapSlots(s1, s2) {
+        const tmp = s1.content; s1.content = s2.content; s2.content = tmp;
+        s1.dom.innerHTML = ''; if(s1.content) s1.dom.appendChild(createTileDOM(s1.content));
+        s2.dom.innerHTML = ''; if(s2.content) s2.dom.appendChild(createTileDOM(s2.content));
+    }
+
+    function autoSolve() {
+        if(!gameActive || isPaused) return;
+        isAutoSolved = true; moveHistory = [];
+        slots.forEach(s => s.content = null);
+        tiles.forEach(t => {
+            const target = slots.find(s => s.type === 'board' && s.index === t.correctSlot);
+            target.content = t;
+        });
+        renderSlots();
+        toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2000);
+        gameActive = false; clearInterval(timerInt);
+    }
+
+    function checkWin() {
+        if(isAutoSolved) return;
+        const boardSlots = slots.filter(s => s.type === 'board');
+        if (boardSlots.every(s => s.content !== null)) {
+            gameActive = false; clearInterval(timerInt); winCount++;
+            document.getElementById('win-count').innerText = "W: " + winCount;
+            document.getElementById('final-time').innerText = "Time: " + document.getElementById('timer').innerText;
+            winModal.style.display = 'flex';
+        }
+    }
+
+    window.addEventListener('resize', () => { updateDropdownLabels(); calculateLayout(); renderSlots(); });
+    updateDropdownLabels(); startNewGame();
+</script>
+</body>
+</html>
