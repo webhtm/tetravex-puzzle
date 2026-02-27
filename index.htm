@@ -16,15 +16,19 @@
             --highlight: #ffee58;
             --danger: #ef5350;
             --success: #66bb6a;
-            
             /* Dynamic Logic Variables */
             --grid-n: 3; /* Default, updated by JS */
             --tile-font-size: 14px; /* Updated by ResizeObserver */
             --gap-size: 4px;
         }
 
-        * { box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
-        
+        * {
+            box-sizing: border-box;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
         body {
             margin: 0;
             background-color: var(--bg);
@@ -51,7 +55,11 @@
             gap: 10px;
         }
 
-        .bar-group { display: flex; align-items: center; gap: 8px; }
+        .bar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
         .game-title {
             font-weight: 900;
@@ -60,7 +68,13 @@
             color: var(--accent);
             display: none;
         }
-        @media(min-width: 900px) { .game-title { display: block; margin-right: 15px; } }
+
+        @media(min-width: 900px) {
+            .game-title {
+                display: block;
+                margin-right: 15px;
+            }
+        }
 
         .stat-box {
             font-family: monospace;
@@ -84,17 +98,41 @@
         }
 
         button {
-            border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold;
-            cursor: pointer; font-size: 0.85rem; display: flex; align-items: center;
-            gap: 6px; transition: background 0.2s, transform 0.1s; white-space: nowrap;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
         }
-        button:active { transform: scale(0.95); }
-        .btn-new { background: var(--accent); color: #000; }
-        .btn-pause { background: #ff9800; color: #000; }
-        
-        .btn-text { display: none; }
-        @media (min-width: 768px) { 
-            .btn-text { display: inline; } 
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-new {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-pause {
+            background: #ff9800;
+            color: #000;
+        }
+
+        .btn-text {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .btn-text {
+                display: inline;
+            }
         }
 
         /* --- Controls Bar (Sub Bar) --- */
@@ -110,19 +148,44 @@
         }
 
         .btn-round {
-            width: 38px; height: 38px; border-radius: 50%;
-            background: #2a2a2a; color: #eee; border: 1px solid #555;
-            font-size: 0.95rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            display: flex; justify-content: center; align-items: center; padding: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #2a2a2a;
+            color: #eee;
+            border: 1px solid #555;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
         }
-        .btn-round:active { background: #444; transform: scale(0.9); }
-        .btn-hint { color: #ffd700; border-color: #ffd700; }
-        .btn-hint:active { background: rgba(255, 215, 0, 0.1); }
-        
+
+        .btn-round:active {
+            background: #444;
+            transform: scale(0.9);
+        }
+
+        .btn-hint {
+            color: #ffd700;
+            border-color: #ffd700;
+        }
+
+        .btn-hint:active {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
         .btn-solve-round {
-            background: var(--slot-bg); color: var(--accent); border: 1px solid var(--accent);
-            padding: 0 15px; border-radius: 20px; height: 36px;
-            display: flex; align-items: center; gap: 8px;
+            background: var(--slot-bg);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0 15px;
+            border-radius: 20px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         /* --- Game Layout Engine --- */
@@ -136,7 +199,7 @@
             gap: 10px;
             /* Default Mobile: Vertical Stack */
             flex-direction: column;
-            justify-content: space-evenly; 
+            justify-content: space-evenly;
             align-items: center;
         }
 
@@ -157,7 +220,7 @@
             justify-content: center;
             position: relative;
             /* Important: Allow shrinking */
-            min-width: 0; 
+            min-width: 0;
             min-height: 0;
             z-index: 1;
         }
@@ -179,34 +242,11 @@
             grid-template-columns: repeat(var(--grid-n), 1fr);
             grid-template-rows: repeat(var(--grid-n), 1fr);
             gap: var(--gap-size);
-            
             background: #1a1a1a;
             border: 2px solid #333;
             padding: var(--gap-size);
             border-radius: 4px;
-
-            /* Aspect Ratio Hack: Keeps it perfectly square */
-            aspect-ratio: 1 / 1;
-            
-            /* Sizing Logic: 
-               It tries to be as big as possible (100%), 
-               but is constrained by 'max-height' or 'max-width' 
-               based on viewport size (vmin) 
-            */
-            width: 100%;
-            height: auto;
-            
-            /* Mobile limits: Don't exceed width, but also share height between 2 boards */
-            max-width: 95vw; 
-            max-height: 40vh; 
-        }
-
-        @media (min-width: 800px) {
-            .grid {
-                /* Desktop limits: Side by side, so height is the bottleneck usually */
-                max-width: 80vh; 
-                max-height: 80vh;
-            }
+            /* Sizing now handled by JS for flexibility */
         }
 
         /* --- Slots & Tiles --- */
@@ -217,15 +257,18 @@
             height: 100%;
             border-radius: 2px;
         }
-        
+
         .slot.selected-slot {
             background-color: rgba(255, 238, 88, 0.15);
             box-shadow: inset 0 0 0 1px var(--highlight);
         }
 
         .tile {
-            width: 100%; height: 100%;
-            position: absolute; top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
             background: var(--tile-bg);
             box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
             cursor: pointer;
@@ -237,10 +280,12 @@
         }
 
         .tile.dragging {
-            opacity: 0.95; z-index: 9999;
+            opacity: 0.95;
+            z-index: 9999;
             box-shadow: 0 15px 30px rgba(0,0,0,0.6);
             transform: scale(1.05);
-            position: fixed; pointer-events: none;
+            position: fixed;
+            pointer-events: none;
             border: 1px solid var(--accent);
         }
 
@@ -252,17 +297,19 @@
         /* Numbers on Tile */
         .val {
             position: absolute;
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            font-weight: bold; 
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
             font-family: 'Courier New', monospace;
             text-shadow: 1px 1px 0 rgba(0,0,0,0.9);
-            
             /* Dynamic Font Size via JS Observer */
-            font-size: var(--tile-font-size); 
+            font-size: var(--tile-font-size);
             line-height: 1;
         }
-        
+
         /* Positioning numbers relative to the center cross */
         .v-top { top: -25%; left: 0; }
         .v-btm { bottom: -25%; left: 0; }
@@ -270,602 +317,704 @@
         .v-rgt { top: 0; right: -25%; }
 
         /* The 'X' divider lines */
-        .x-lines { position: absolute; width: 100%; height: 100%; pointer-events: none; opacity: 0.3; }
+        .x-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
         .x-lines::before, .x-lines::after {
-            content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px;
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
             background: white;
         }
+
         .x-lines::before { transform: rotate(45deg); }
         .x-lines::after { transform: rotate(-45deg); }
 
         /* Color Palette for Numbers */
-        .n0 { color: #cfd8dc; } .n1 { color: #64b5f6; } .n2 { color: #81c784; }
-        .n3 { color: #fff176; } .n4 { color: #ba68c8; } .n5 { color: #e57373; }
-        .n6 { color: #4dd0e1; } .n7 { color: #ffb74d; } .n8 { color: #f06292; }
+        .n0 { color: #cfd8dc; }
+        .n1 { color: #64b5f6; }
+        .n2 { color: #81c784; }
+        .n3 { color: #fff176; }
+        .n4 { color: #ba68c8; }
+        .n5 { color: #e57373; }
+        .n6 { color: #4dd0e1; }
+        .n7 { color: #ffb74d; }
+        .n8 { color: #f06292; }
         .n9 { color: #a1887f; }
 
         /* --- Modals & Utilities --- */
         .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none; justify-content: center;
-            align-items: center; flex-direction: column; z-index: 2000; backdrop-filter: blur(4px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
         }
-        .modal h1 { font-size: 2.5rem; margin-bottom: 10px; color: var(--text-main); }
-        .modal p { color: #aaa; margin-bottom: 20px; }
-        
+
+        .modal h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .modal p {
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
         #toast {
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-            background: #fff; color: #000; padding: 10px 20px; border-radius: 20px;
-            font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 5000;
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 5000;
         }
-        #toast.show { opacity: 1; }
+
+        #toast.show {
+            opacity: 1;
+        }
 
         @keyframes shake {
-            0% { transform: translateX(0); } 25% { transform: translateX(-4px); }
-            50% { transform: translateX(4px); } 75% { transform: translateX(-4px); }
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
+            75% { transform: translateX(-4px); }
             100% { transform: translateX(0); }
         }
-        .shake { animation: shake 0.3s ease-in-out; }
 
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body>
-
-<div id="top-bar">
-    <div class="bar-group">
-        <div class="game-title">TETRAVEX</div>
-        <select id="diff-select" onchange="startNewGame()"></select>
-        <button class="btn-new" onclick="startNewGame()" title="New Game">
-            <i class="fa-solid fa-rotate-right"></i> <span class="btn-text">New Game</span>
+    <div id="top-bar">
+        <div class="bar-group">
+            <div class="game-title">TETRAVEX</div>
+            <select id="diff-select" onchange="startNewGame()"></select>
+            <button class="btn-new" onclick="startNewGame()" title="New Game">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span class="btn-text">New Game</span>
+            </button>
+        </div>
+        <div class="bar-group">
+            <button class="btn-pause" onclick="togglePause()" title="Pause">
+                <i class="fa-solid fa-pause"></i>
+                <span class="btn-text">Pause</span>
+            </button>
+            <div class="stat-box" id="win-count" title="Wins">W: 0</div>
+            <div class="stat-box" id="timer">00:00</div>
+        </div>
+    </div>
+    <div id="sub-bar">
+        <button class="btn-round" onclick="undo()" title="Undo">
+            <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button class="btn-round" onclick="redo()" title="Redo">
+            <i class="fa-solid fa-rotate-right"></i>
+        </button>
+        <button class="btn-round btn-hint" onclick="giveHint()" title="Hint">
+            <i class="fa-solid fa-lightbulb"></i>
+        </button>
+        <button class="btn-solve-round" onclick="autoSolve()" title="Auto Solve">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span class="btn-text">Solve</span>
         </button>
     </div>
-    <div class="bar-group">
-        <button class="btn-pause" onclick="togglePause()" title="Pause">
-            <i class="fa-solid fa-pause"></i> <span class="btn-text">Pause</span>
-        </button>
-        <div class="stat-box" id="win-count" title="Wins">W: 0</div>
-        <div class="stat-box" id="timer">00:00</div>
+    <div id="game-area">
+        <div class="grid-container">
+            <div class="label-text">Target Board</div>
+            <div id="board-grid" class="grid"></div>
+        </div>
+        <div class="grid-container">
+            <div class="label-text">Your Deck</div>
+            <div id="deck-grid" class="grid"></div>
+        </div>
     </div>
-</div>
-
-<div id="sub-bar">
-    <button class="btn-round" onclick="undo()" title="Undo">
-        <i class="fa-solid fa-rotate-left"></i>
-    </button>
-    <button class="btn-round" onclick="redo()" title="Redo">
-        <i class="fa-solid fa-rotate-right"></i>
-    </button>
-    <button class="btn-round btn-hint" onclick="giveHint()" title="Hint">
-        <i class="fa-solid fa-lightbulb"></i>
-    </button>
-    
-    <button class="btn-solve-round" onclick="autoSolve()" title="Auto Solve">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="btn-text">Solve</span>
-    </button>
-</div>
-
-<div id="game-area">
-    <div class="grid-container">
-        <div class="label-text">Target Board</div>
-        <div id="board-grid" class="grid"></div>
+    <div id="toast">Solved.</div>
+    <div id="win-modal" class="modal">
+        <h1 style="color: var(--success);">VICTORY!</h1>
+        <p id="final-time">Time: 00:00</p>
+        <button class="btn-new" onclick="startNewGame()" style="font-size: 1.2rem; padding: 15px 30px;">Play Again</button>
     </div>
-    
-    <div class="grid-container">
-        <div class="label-text">Your Deck</div>
-        <div id="deck-grid" class="grid"></div>
+    <div id="pause-modal" class="modal">
+        <h1>PAUSED</h1>
+        <button class="btn-new" onclick="togglePause()" style="font-size: 1.2rem; padding: 15px 30px; background: #ff9800;">Resume</button>
     </div>
-</div>
+    <script>
+        // --- State ---
+        let gridSize = 3;
+        let tiles = [], slots = [];
+        let winCount = 0;
+        let moveHistory = [], redoStack = [];
+        // Interaction State
+        let dragSrcSlot = null, dragEl = null, dragOffset = {x:0, y:0};
+        let isDragging = false;
+        let selectedSlot = null;
+        let timerInt = null, startTime = 0, elapsedPaused = 0, pauseStartTime = 0;
+        let isPaused = false, isAutoSolved = false, gameActive = false;
+        let hasUsedHint = false;
 
-<div id="toast">Solved.</div>
+        // --- DOM Elements ---
+        const boardGrid = document.getElementById('board-grid');
+        const deckGrid = document.getElementById('deck-grid');
+        const winModal = document.getElementById('win-modal');
+        const pauseModal = document.getElementById('pause-modal');
+        const diffSelect = document.getElementById('diff-select');
+        const toast = document.getElementById('toast');
 
-<div id="win-modal" class="modal">
-    <h1 style="color: var(--success);">VICTORY!</h1>
-    <p id="final-time">Time: 00:00</p>
-    <button class="btn-new" onclick="startNewGame()" style="font-size: 1.2rem; padding: 15px 30px;">Play Again</button>
-</div>
+        // --- Initialization & Responsive Logic ---
+        function updateDropdownLabels() {
+            const isDesktop = window.innerWidth >= 768;
+            const val = diffSelect.value || "3";
+            // Extended options for "Big Games" test
+            const opts = [
+                { v: "2", l: isDesktop ? "2x2 (Tiny)" : "2x2" },
+                { v: "3", l: isDesktop ? "3x3 (Normal)" : "3x3" },
+                { v: "4", l: isDesktop ? "4x4 (Hard)" : "4x4" },
+                { v: "5", l: isDesktop ? "5x5 (Expert)" : "5x5" },
+                { v: "6", l: isDesktop ? "6x6 (Insane)" : "6x6" }
+            ];
+            diffSelect.innerHTML = '';
+            opts.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.v;
+                opt.innerText = o.l;
+                if(o.v === val) opt.selected = true;
+                diffSelect.appendChild(opt);
+            });
+        }
 
-<div id="pause-modal" class="modal">
-    <h1>PAUSED</h1>
-    <button class="btn-new" onclick="togglePause()" style="font-size: 1.2rem; padding: 15px 30px; background: #ff9800;">Resume</button>
-</div>
-
-<script>
-    // --- State ---
-    let gridSize = 3;
-    let tiles = [], slots = [];
-    let winCount = 0;
-    let moveHistory = [], redoStack = [];
-
-    // Interaction State
-    let dragSrcSlot = null, dragEl = null, dragOffset = {x:0, y:0};
-    let isDragging = false;
-    let selectedSlot = null;
-    let timerInt = null, startTime = 0, elapsedPaused = 0, pauseStartTime = 0;
-    let isPaused = false, isAutoSolved = false, gameActive = false;
-    let hasUsedHint = false;
-
-    // --- DOM Elements ---
-    const boardGrid = document.getElementById('board-grid');
-    const deckGrid = document.getElementById('deck-grid');
-    const winModal = document.getElementById('win-modal');
-    const pauseModal = document.getElementById('pause-modal');
-    const diffSelect = document.getElementById('diff-select');
-    const toast = document.getElementById('toast');
-
-    // --- Initialization & Responsive Logic ---
-
-    function updateDropdownLabels() {
-        const isDesktop = window.innerWidth >= 768;
-        const val = diffSelect.value || "3";
-        // Extended options for "Big Games" test
-        const opts = [
-            { v: "2", l: isDesktop ? "2x2 (Tiny)" : "2x2" },
-            { v: "3", l: isDesktop ? "3x3 (Normal)" : "3x3" },
-            { v: "4", l: isDesktop ? "4x4 (Hard)" : "4x4" },
-            { v: "5", l: isDesktop ? "5x5 (Expert)" : "5x5" },
-            { v: "6", l: isDesktop ? "6x6 (Insane)" : "6x6" } 
-        ];
-        diffSelect.innerHTML = '';
-        opts.forEach(o => {
-            const opt = document.createElement('option');
-            opt.value = o.v; opt.innerText = o.l;
-            if(o.v === val) opt.selected = true;
-            diffSelect.appendChild(opt);
-        });
-    }
-
-    // This ResizeObserver ensures fonts always fit, no matter how small the tiles get
-    const resizeObserver = new ResizeObserver(entries => {
-        for (let entry of entries) {
-            // Calculate optimal font size based on tile width
-            // roughly 25% of the tile width usually looks good
-            const w = entry.contentRect.width;
-            if(w > 0) {
-                const fontSize = Math.max(8, w * 0.28); 
-                document.documentElement.style.setProperty('--tile-font-size', fontSize + 'px');
+        // This ResizeObserver ensures fonts always fit, no matter how small the tiles get
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                // Calculate optimal font size based on tile width
+                // roughly 25% of the tile width usually looks good
+                const w = entry.contentRect.width;
+                if(w > 0) {
+                    const fontSize = Math.max(8, w * 0.28);
+                    document.documentElement.style.setProperty('--tile-font-size', fontSize + 'px');
+                }
             }
-        }
-    });
-
-    function startNewGame() {
-        gridSize = parseInt(diffSelect.value);
-        
-        // Update CSS Variable for Grid Layout - this handles the 1fr splitting
-        document.documentElement.style.setProperty('--grid-n', gridSize);
-        
-        winModal.style.display = 'none';
-        pauseModal.style.display = 'none';
-        isAutoSolved = false; isPaused = false; gameActive = true;
-        hasUsedHint = false;
-        selectedSlot = null; isDragging = false;
-        
-        moveHistory = []; redoStack = [];
-        
-        generatePuzzle();
-        renderSlots();
-        
-        // Start watching the grid size for font scaling
-        resizeObserver.disconnect();
-        // Watch one slot to determine size for all
-        const firstSlot = document.querySelector('.slot');
-        if(firstSlot) resizeObserver.observe(firstSlot);
-
-        clearInterval(timerInt);
-        startTime = Date.now(); elapsedPaused = 0;
-        document.getElementById('timer').innerText = "00:00";
-        timerInt = setInterval(updateTimer, 1000);
-    }
-
-    function updateTimer() {
-        if(!gameActive || isPaused) return;
-        let delta = Date.now() - startTime - elapsedPaused;
-        let s = Math.floor(delta/1000);
-        let m = Math.floor(s/60).toString().padStart(2,'0');
-        s = (s%60).toString().padStart(2,'0');
-        document.getElementById('timer').innerText = `${m}:${s}`;
-    }
-
-    function togglePause() {
-        if(!gameActive) return;
-        isPaused = !isPaused;
-        if(isPaused) {
-            pauseStartTime = Date.now();
-            pauseModal.style.display = 'flex';
-        } else {
-            elapsedPaused += (Date.now() - pauseStartTime);
-            pauseModal.style.display = 'none';
-        }
-    }
-
-    // --- History Logic ---
-    function saveState() {
-        const snapshot = slots.map(s => s.content ? s.content.id : null);
-        moveHistory.push(snapshot);
-        if(moveHistory.length > 50) moveHistory.shift();
-    }
-
-    function loadState(snapshot) {
-        snapshot.forEach((tileId, index) => {
-            const slot = slots[index];
-            if (tileId === null) slot.content = null;
-            else slot.content = tiles.find(t => t.id === tileId);
-        });
-        renderSlots();
-    }
-
-    function undo() {
-        if (!gameActive || isPaused || moveHistory.length === 0) return;
-        redoStack.push(slots.map(s => s.content ? s.content.id : null));
-        loadState(moveHistory.pop());
-        deselectSlot();
-    }
-
-    function redo() {
-        if (!gameActive || isPaused || redoStack.length === 0) return;
-        moveHistory.push(slots.map(s => s.content ? s.content.id : null));
-        loadState(redoStack.pop());
-        deselectSlot();
-    }
-
-    // --- Hint Logic ---
-    function giveHint() {
-        if(!gameActive || isPaused) return;
-        hasUsedHint = true;
-
-        const incorrectSlot = slots.find(s => 
-            s.type === 'board' && 
-            s.content !== null && 
-            s.index !== s.content.correctSlot
-        );
-
-        if (incorrectSlot) {
-            const emptyDeckSlot = slots.find(s => s.type === 'deck' && s.content === null);
-            if(emptyDeckSlot) {
-                saveState();
-                swapSlots(incorrectSlot, emptyDeckSlot);
-                flashSlot(emptyDeckSlot, '#ef5350');
-                showToast("Fixing incorrect tile...");
-            }
-            return;
-        }
-
-        const validHint = tiles.find(t => {
-            const currentSlot = slots.find(s => s.content === t);
-            if(currentSlot.type === 'board') return false; 
-            const targetSlot = slots.find(s => s.index === t.correctSlot && s.type === 'board');
-            if(targetSlot.content !== null) return false; 
-            return validateMove(t, targetSlot);
         });
 
-        if (validHint) {
-            const currentSlot = slots.find(s => s.content === validHint);
-            const targetSlot = slots.find(s => s.index === validHint.correctSlot && s.type === 'board');
-            
-            saveState();
-            swapSlots(currentSlot, targetSlot);
-            flashSlot(targetSlot, '#00e676');
-            redoStack = []; 
-            checkWin(); 
-        } else {
-            showToast("No legal moves available.");
-        }
-    }
-
-    function flashSlot(slot, color) {
-        const tileEl = slot.dom.querySelector('.tile');
-        if(tileEl) {
-            tileEl.style.transition = 'box-shadow 0.5s';
-            tileEl.style.boxShadow = `inset 0 0 0 4px ${color}`;
-            setTimeout(() => { tileEl.style.boxShadow = ''; tileEl.style.transition = ''; }, 600);
-        }
-    }
-
-    function showToast(msg) {
-        toast.innerText = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
-    }
-
-    // --- Core Puzzle Logic ---
-    function generatePuzzle() {
-        tiles = [];
-        const total = gridSize * gridSize;
-        let solvedMap = new Array(total).fill(null).map(() => ({}));
-
-        for(let y=0; y<gridSize; y++) {
-            for(let x=0; x<gridSize; x++) {
-                let idx = y * gridSize + x;
-                let t = solvedMap[idx];
-                
-                t.top = (y > 0) ? solvedMap[(y-1)*gridSize + x].bottom : rInt(10);
-                t.left = (x > 0) ? solvedMap[y*gridSize + (x-1)].right : rInt(10);
-                t.bottom = rInt(10); 
-                t.right = rInt(10);
-
-                tiles.push({ id: idx, vals: [t.top, t.right, t.bottom, t.left], correctSlot: idx });
-            }
-        }
-
-        let shuffled = [...tiles];
-        // Fisher-Yates Shuffle
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-
-        slots = [];
-        for(let i=0; i<total; i++) slots.push({ id: `b-${i}`, type: 'board', x: i%gridSize, y: Math.floor(i/gridSize), index: i, content: null });
-        for(let i=0; i<total; i++) slots.push({ id: `d-${i}`, type: 'deck', index: i, content: shuffled[i] });
-    }
-
-    function rInt(max) { return Math.floor(Math.random() * max); }
-
-    // --- Rendering ---
-    function renderSlots() {
-        boardGrid.innerHTML = ''; deckGrid.innerHTML = '';
-        
-        slots.forEach(slot => {
-            const el = document.createElement('div');
-            el.className = 'slot';
-            if(selectedSlot === slot) el.classList.add('selected-slot');
-            
-            // Events
-            el.addEventListener('mousedown', (e) => handleStart(e, slot));
-            el.addEventListener('touchstart', (e) => handleStart(e, slot), {passive: false});
-            
-            el.dataset.slotIdx = slots.indexOf(slot);
-            
-            if (slot.content) el.appendChild(createTileDOM(slot.content));
-            
-            if (slot.type === 'board') boardGrid.appendChild(el);
-            else deckGrid.appendChild(el);
-            
-            slot.dom = el;
-        });
-        
-        // Re-observe for font scaling if DOM regenerated
-        resizeObserver.disconnect();
-        const firstSlot = document.querySelector('.slot');
-        if(firstSlot) resizeObserver.observe(firstSlot);
-    }
-
-    function createTileDOM(tileObj) {
-        const div = document.createElement('div');
-        div.className = 'tile';
-        if(selectedSlot && selectedSlot.content === tileObj) div.classList.add('selected-tile');
-        
-        div.innerHTML = `
-            <div class="x-lines"></div>
-            <div class="val v-top n${tileObj.vals[0]}">${tileObj.vals[0]}</div>
-            <div class="val v-rgt n${tileObj.vals[1]}">${tileObj.vals[1]}</div>
-            <div class="val v-btm n${tileObj.vals[2]}">${tileObj.vals[2]}</div>
-            <div class="val v-lft n${tileObj.vals[3]}">${tileObj.vals[3]}</div>
-        `;
-        return div;
-    }
-
-    // --- Input Handling (Drag & Drop) ---
-    let startX = 0, startY = 0;
-
-    function handleStart(e, slot) {
-        if(!gameActive || isPaused) return;
-        const touch = e.touches ? e.touches[0] : e;
-        if (e.touches) e.preventDefault(); 
-        
-        dragSrcSlot = slot; 
-        isDragging = false;
-        startX = touch.clientX; 
-        startY = touch.clientY;
-
-        const tileEl = slot.dom.querySelector('.tile');
-        if (!tileEl) {
-            if (selectedSlot) handleTap(slot);
-            return;
-        }
-
-        // Prepare Drag Element
-        dragEl = tileEl.cloneNode(true);
-        dragEl.classList.add('dragging');
-        // Fix dimensions for the floating ghost element
-        dragEl.style.width = tileEl.offsetWidth + 'px';
-        dragEl.style.height = tileEl.offsetHeight + 'px';
-        
-        const rect = tileEl.getBoundingClientRect();
-        dragOffset.x = touch.clientX - rect.left;
-        dragOffset.y = touch.clientY - rect.top;
-
-        if (e.touches) {
-            document.addEventListener('touchmove', handleMove, {passive: false});
-            document.addEventListener('touchend', handleEnd);
-        } else {
-            document.addEventListener('mousemove', handleMove);
-            document.addEventListener('mouseup', handleEnd);
-        }
-    }
-
-    function handleMove(e) {
-        const touch = e.touches ? e.touches[0] : e;
-        const dx = Math.abs(touch.clientX - startX);
-        const dy = Math.abs(touch.clientY - startY);
-
-        if (!isDragging && (dx > 5 || dy > 5)) {
-            isDragging = true;
-            document.body.appendChild(dragEl);
-            if(dragSrcSlot.dom.querySelector('.tile')) {
-                dragSrcSlot.dom.querySelector('.tile').style.opacity = '0';
-            }
-            deselectSlot();
-        }
-
-        if (isDragging) {
-            e.preventDefault();
-            dragEl.style.left = (touch.clientX - dragOffset.x) + 'px';
-            dragEl.style.top = (touch.clientY - dragOffset.y) + 'px';
-        }
-    }
-
-    function handleEnd(e) {
-        const touch = e.changedTouches ? e.changedTouches[0] : e;
-        
-        document.removeEventListener('touchmove', handleMove);
-        document.removeEventListener('touchend', handleEnd);
-        document.removeEventListener('mousemove', handleMove);
-        document.removeEventListener('mouseup', handleEnd);
-
-        if (isDragging) {
-            dragEl.style.display = 'none';
-            // Find element below cursor
-            let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-            dragEl.style.display = 'block';
-
-            let targetSlot = null;
-            if (elemBelow) {
-                const targetDom = elemBelow.closest('.slot');
-                if (targetDom) targetSlot = slots[parseInt(targetDom.dataset.slotIdx)];
-            }
-
-            dragEl.remove(); dragEl = null;
-            const orig = dragSrcSlot.dom.querySelector('.tile');
-            if(orig) orig.style.opacity = '1';
-
-            if (targetSlot && targetSlot !== dragSrcSlot) {
-                attemptMove(dragSrcSlot, targetSlot);
-            }
-        } else {
-            if(dragEl && dragEl.parentNode) dragEl.remove();
-            dragEl = null;
-            handleTap(dragSrcSlot);
-        }
-        isDragging = false; dragSrcSlot = null;
-    }
-
-    function handleTap(slot) {
-        if (!selectedSlot) {
-            if (slot.content) selectSlot(slot);
-            return;
-        }
-        if (selectedSlot === slot) {
-            deselectSlot();
-            return;
-        }
-        attemptMove(selectedSlot, slot);
-    }
-
-    function selectSlot(slot) {
-        if(selectedSlot) deselectSlot();
-        selectedSlot = slot;
-        slot.dom.classList.add('selected-slot');
-        const tile = slot.dom.querySelector('.tile');
-        if(tile) tile.classList.add('selected-tile');
-    }
-
-    function deselectSlot() {
-        if(!selectedSlot) return;
-        selectedSlot.dom.classList.remove('selected-slot');
-        const tile = selectedSlot.dom.querySelector('.tile');
-        if(tile) tile.classList.remove('selected-tile');
-        selectedSlot = null;
-    }
-
-    // --- Validation & Win Condition ---
-    function attemptMove(fromSlot, toSlot) {
-        let success = false;
-        if (toSlot.type === 'deck') {
-            saveState(); swapSlots(fromSlot, toSlot); success = true;
-        } else {
-            if (validateMove(fromSlot.content, toSlot)) {
-                saveState(); swapSlots(fromSlot, toSlot); success = true;
-            }
-        }
-        
-        if (success) {
-            redoStack = []; deselectSlot(); checkWin();
-        } else {
-            const tile = fromSlot.dom.querySelector('.tile');
-            if(tile) {
-                tile.classList.add('shake');
-                setTimeout(()=> tile.classList.remove('shake'), 300);
-            }
-        }
-    }
-
-    function validateMove(tileContent, targetSlot) {
-        if(!tileContent) return true;
-        
-        const nTop = getNeighbor(targetSlot, 0, -1);
-        const nBot = getNeighbor(targetSlot, 0, 1);
-        const nLeft = getNeighbor(targetSlot, -1, 0);
-        const nRight = getNeighbor(targetSlot, 1, 0);
-
-        if (nTop && nTop.content && nTop.content.vals[2] !== tileContent.vals[0]) return false;
-        if (nBot && nBot.content && nBot.content.vals[0] !== tileContent.vals[2]) return false;
-        if (nLeft && nLeft.content && nLeft.content.vals[1] !== tileContent.vals[3]) return false;
-        if (nRight && nRight.content && nRight.content.vals[3] !== tileContent.vals[1]) return false;
-
-        return true;
-    }
-
-    function getNeighbor(slot, dx, dy) {
-        if(slot.type !== 'board') return null;
-        const nx = slot.x + dx; const ny = slot.y + dy;
-        if(nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize) return null;
-        return slots.find(s => s.type === 'board' && s.x === nx && s.y === ny);
-    }
-
-    function swapSlots(s1, s2) {
-        const tmp = s1.content; s1.content = s2.content; s2.content = tmp;
-        
-        // Re-render contents inside existing DOM nodes
-        s1.dom.innerHTML = ''; 
-        if(s1.content) s1.dom.appendChild(createTileDOM(s1.content));
-        
-        s2.dom.innerHTML = ''; 
-        if(s2.content) s2.dom.appendChild(createTileDOM(s2.content));
-    }
-
-    function autoSolve() {
-        if(!gameActive || isPaused) return;
-        isAutoSolved = true; moveHistory = [];
-        
-        slots.forEach(s => s.content = null);
-        tiles.forEach(t => {
-            const target = slots.find(s => s.type === 'board' && s.index === t.correctSlot);
-            target.content = t;
-        });
-        renderSlots();
-        showToast("Solved.");
-        gameActive = false; clearInterval(timerInt);
-    }
-
-    function checkWin() {
-        if(isAutoSolved) return;
-        const boardSlots = slots.filter(s => s.type === 'board');
-        
-        if (boardSlots.every(s => s.content !== null)) {
-            gameActive = false; 
-            clearInterval(timerInt);
-            
-            if (hasUsedHint) {
-                 document.querySelector('#win-modal h1').innerText = "SOLVED";
-                 document.querySelector('#win-modal h1').style.color = "#4fc3f7";
+        function adjustGridSizes() {
+            const gameArea = document.getElementById('game-area');
+            const rect = gameArea.getBoundingClientRect();
+            const availW = rect.width;
+            const availH = rect.height;
+            const isRow = window.innerWidth >= 800;
+            let size;
+            if (!isRow) {
+                // Vertical stack: account for paddings, gaps, labels
+                const fixedVertical = 80; // Approx: paddings 20, labels 40, margins 10, gap 10
+                size = Math.min(availW - 20, (availH - fixedVertical) / 2);
             } else {
-                 winCount++;
-                 document.getElementById('win-count').innerText = "W: " + winCount;
-                 document.querySelector('#win-modal h1').innerText = "VICTORY!";
-                 document.querySelector('#win-modal h1').style.color = "#66bb6a";
+                // Horizontal: side by side
+                const fixedHorizontal = 50; // Paddings 20, gap 30
+                const fixedVertical = 40; // Paddings 20, label+margin ~20
+                size = Math.min((availW - fixedHorizontal) / 2, availH - fixedVertical);
             }
-            
-            document.getElementById('final-time').innerText = "Time: " + document.getElementById('timer').innerText;
-            winModal.style.display = 'flex';
+            // Ensure positive size
+            size = Math.max(100, size); // Minimum size to prevent too small
+            const grids = document.querySelectorAll('.grid');
+            grids.forEach(g => {
+                g.style.width = `${size}px`;
+                g.style.height = `${size}px`;
+            });
+        }
+
+        function startNewGame() {
+            gridSize = parseInt(diffSelect.value);
+            // Update CSS Variable for Grid Layout - this handles the 1fr splitting
+            document.documentElement.style.setProperty('--grid-n', gridSize);
+            winModal.style.display = 'none';
+            pauseModal.style.display = 'none';
+            isAutoSolved = false;
+            isPaused = false;
+            gameActive = true;
+            hasUsedHint = false;
+            selectedSlot = null;
+            isDragging = false;
+            moveHistory = [];
+            redoStack = [];
+            generatePuzzle();
+            renderSlots();
+            // Start watching the grid size for font scaling
+            resizeObserver.disconnect();
+            // Watch one slot to determine size for all
+            const firstSlot = document.querySelector('.slot');
+            if(firstSlot) resizeObserver.observe(firstSlot);
+            clearInterval(timerInt);
+            startTime = Date.now();
+            elapsedPaused = 0;
+            document.getElementById('timer').innerText = "00:00";
+            timerInt = setInterval(updateTimer, 1000);
+            adjustGridSizes();
+        }
+
+        function updateTimer() {
+            if(!gameActive || isPaused) return;
+            let delta = Date.now() - startTime - elapsedPaused;
+            let s = Math.floor(delta/1000);
+            let m = Math.floor(s/60).toString().padStart(2,'0');
+            s = (s%60).toString().padStart(2,'0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+        }
+
+        function togglePause() {
+            if(!gameActive) return;
+            isPaused = !isPaused;
+            if(isPaused) {
+                pauseStartTime = Date.now();
+                pauseModal.style.display = 'flex';
+            } else {
+                elapsedPaused += (Date.now() - pauseStartTime);
+                pauseModal.style.display = 'none';
+            }
+        }
+
+        // --- History Logic ---
+        function saveState() {
+            const snapshot = slots.map(s => s.content ? s.content.id : null);
+            moveHistory.push(snapshot);
+            if(moveHistory.length > 50) moveHistory.shift();
+        }
+
+        function loadState(snapshot) {
+            snapshot.forEach((tileId, index) => {
+                const slot = slots[index];
+                if (tileId === null) slot.content = null;
+                else slot.content = tiles.find(t => t.id === tileId);
+            });
+            renderSlots();
+        }
+
+        function undo() {
+            if (!gameActive || isPaused || moveHistory.length === 0) return;
+            redoStack.push(slots.map(s => s.content ? s.content.id : null));
+            loadState(moveHistory.pop());
+            deselectSlot();
+        }
+
+        function redo() {
+            if (!gameActive || isPaused || redoStack.length === 0) return;
+            moveHistory.push(slots.map(s => s.content ? s.content.id : null));
+            loadState(redoStack.pop());
+            deselectSlot();
+        }
+
+        // --- Hint Logic ---
+        function giveHint() {
+            if(!gameActive || isPaused) return;
+            hasUsedHint = true;
+            const incorrectSlot = slots.find(s => s.type === 'board' && s.content !== null && s.index !== s.content.correctSlot );
+            if (incorrectSlot) {
+                const emptyDeckSlot = slots.find(s => s.type === 'deck' && s.content === null);
+                if(emptyDeckSlot) {
+                    saveState();
+                    swapSlots(incorrectSlot, emptyDeckSlot);
+                    flashSlot(emptyDeckSlot, '#ef5350');
+                    showToast("Fixing incorrect tile...");
+                }
+                return;
+            }
+            const validHint = tiles.find(t => {
+                const currentSlot = slots.find(s => s.content === t);
+                if(currentSlot.type === 'board') return false;
+                const targetSlot = slots.find(s => s.index === t.correctSlot && s.type === 'board');
+                if(targetSlot.content !== null) return false;
+                return validateMove(t, targetSlot);
+            });
+            if (validHint) {
+                const currentSlot = slots.find(s => s.content === validHint);
+                const targetSlot = slots.find(s => s.index === validHint.correctSlot && s.type === 'board');
+                saveState();
+                swapSlots(currentSlot, targetSlot);
+                flashSlot(targetSlot, '#00e676');
+                redoStack = [];
+                checkWin();
+            } else {
+                showToast("No legal moves available.");
+            }
+        }
+
+        function flashSlot(slot, color) {
+            const tileEl = slot.dom.querySelector('.tile');
+            if(tileEl) {
+                tileEl.style.transition = 'box-shadow 0.5s';
+                tileEl.style.boxShadow = `inset 0 0 0 4px ${color}`;
+                setTimeout(() => {
+                    tileEl.style.boxShadow = '';
+                    tileEl.style.transition = '';
+                }, 600);
+            }
+        }
+
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // --- Core Puzzle Logic ---
+        function generatePuzzle() {
+            tiles = [];
+            const total = gridSize * gridSize;
+            let solvedMap = new Array(total).fill(null).map(() => ({}));
+            for(let y=0; y<gridSize; y++) {
+                for(let x=0; x<gridSize; x++) {
+                    let idx = y * gridSize + x;
+                    let t = solvedMap[idx];
+                    t.top = (y > 0) ? solvedMap[(y-1)*gridSize + x].bottom : rInt(10);
+                    t.left = (x > 0) ? solvedMap[y*gridSize + (x-1)].right : rInt(10);
+                    t.bottom = rInt(10);
+                    t.right = rInt(10);
+                    tiles.push({ id: idx, vals: [t.top, t.right, t.bottom, t.left], correctSlot: idx });
+                }
+            }
+            let shuffled = [...tiles];
+            // Fisher-Yates Shuffle
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            slots = [];
+            for(let i=0; i<total; i++) slots.push({ id: `b-${i}`, type: 'board', x: i%gridSize, y: Math.floor(i/gridSize), index: i, content: null });
+            for(let i=0; i<total; i++) slots.push({ id: `d-${i}`, type: 'deck', index: i, content: shuffled[i] });
+        }
+
+        function rInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+        // --- Rendering ---
+        function renderSlots() {
+            boardGrid.innerHTML = '';
+            deckGrid.innerHTML = '';
+            slots.forEach(slot => {
+                const el = document.createElement('div');
+                el.className = 'slot';
+                if(selectedSlot === slot) el.classList.add('selected-slot');
+                // Events
+                el.addEventListener('mousedown', (e) => handleStart(e, slot));
+                el.addEventListener('touchstart', (e) => handleStart(e, slot), {passive: false});
+                el.dataset.slotIdx = slots.indexOf(slot);
+                if (slot.content) el.appendChild(createTileDOM(slot.content));
+                if (slot.type === 'board') boardGrid.appendChild(el);
+                else deckGrid.appendChild(el);
+                slot.dom = el;
+            });
+            // Re-observe for font scaling if DOM regenerated
+            resizeObserver.disconnect();
+            const firstSlot = document.querySelector('.slot');
+            if(firstSlot) resizeObserver.observe(firstSlot);
+        }
+
+        function createTileDOM(tileObj) {
+            const div = document.createElement('div');
+            div.className = 'tile';
+            if(selectedSlot && selectedSlot.content === tileObj) div.classList.add('selected-tile');
+            div.innerHTML = `
+                <div class="x-lines"></div>
+                <div class="val v-top n${tileObj.vals[0]}">${tileObj.vals[0]}</div>
+                <div class="val v-rgt n${tileObj.vals[1]}">${tileObj.vals[1]}</div>
+                <div class="val v-btm n${tileObj.vals[2]}">${tileObj.vals[2]}</div>
+                <div class="val v-lft n${tileObj.vals[3]}">${tileObj.vals[3]}</div>
+            `;
+            return div;
+        }
+
+        // --- Input Handling (Drag & Drop) ---
+        let startX = 0, startY = 0;
+        function handleStart(e, slot) {
+            if(!gameActive || isPaused) return;
+            const touch = e.touches ? e.touches[0] : e;
+            if (e.touches) e.preventDefault();
+            dragSrcSlot = slot;
+            isDragging = false;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            const tileEl = slot.dom.querySelector('.tile');
+            if (!tileEl) {
+                if (selectedSlot) handleTap(slot);
+                return;
+            }
+            // Prepare Drag Element
+            dragEl = tileEl.cloneNode(true);
+            dragEl.classList.add('dragging');
+            // Fix dimensions for the floating ghost element
+            dragEl.style.width = tileEl.offsetWidth + 'px';
+            dragEl.style.height = tileEl.offsetHeight + 'px';
+            const rect = tileEl.getBoundingClientRect();
+            dragOffset.x = touch.clientX - rect.left;
+            dragOffset.y = touch.clientY - rect.top;
+            if (e.touches) {
+                document.addEventListener('touchmove', handleMove, {passive: false});
+                document.addEventListener('touchend', handleEnd);
+            } else {
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('mouseup', handleEnd);
+            }
+        }
+
+        function handleMove(e) {
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = Math.abs(touch.clientX - startX);
+            const dy = Math.abs(touch.clientY - startY);
+            if (!isDragging && (dx > 5 || dy > 5)) {
+                isDragging = true;
+                document.body.appendChild(dragEl);
+                if(dragSrcSlot.dom.querySelector('.tile')) {
+                    dragSrcSlot.dom.querySelector('.tile').style.opacity = '0';
+                }
+                deselectSlot();
+            }
+            if (isDragging) {
+                e.preventDefault();
+                dragEl.style.left = (touch.clientX - dragOffset.x) + 'px';
+                dragEl.style.top = (touch.clientY - dragOffset.y) + 'px';
+            }
+        }
+
+        function handleEnd(e) {
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+            document.removeEventListener('touchmove', handleMove);
+            document.removeEventListener('touchend', handleEnd);
+            document.removeEventListener('mousemove', handleMove);
+            document.removeEventListener('mouseup', handleEnd);
+            if (isDragging) {
+                dragEl.style.display = 'none';
+                // Find element below cursor
+                let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                dragEl.style.display = 'block';
+                let targetSlot = null;
+                if (elemBelow) {
+                    const targetDom = elemBelow.closest('.slot');
+                    if (targetDom) targetSlot = slots[parseInt(targetDom.dataset.slotIdx)];
+                }
+                dragEl.remove();
+                dragEl = null;
+                const orig = dragSrcSlot.dom.querySelector('.tile');
+                if(orig) orig.style.opacity = '1';
+                if (targetSlot && targetSlot !== dragSrcSlot) {
+                    attemptMove(dragSrcSlot, targetSlot);
+                }
+            } else {
+                if(dragEl && dragEl.parentNode) dragEl.remove();
+                dragEl = null;
+                handleTap(dragSrcSlot);
+            }
+            isDragging = false;
+            dragSrcSlot = null;
+        }
+
+        function handleTap(slot) {
+            if (!selectedSlot) {
+                if (slot.content) selectSlot(slot);
+                return;
+            }
+            if (selectedSlot === slot) {
+                deselectSlot();
+                return;
+            }
+            attemptMove(selectedSlot, slot);
+        }
+
+        function selectSlot(slot) {
+            if(selectedSlot) deselectSlot();
+            selectedSlot = slot;
+            slot.dom.classList.add('selected-slot');
+            const tile = slot.dom.querySelector('.tile');
+            if(tile) tile.classList.add('selected-tile');
+        }
+
+        function deselectSlot() {
+            if(!selectedSlot) return;
+            selectedSlot.dom.classList.remove('selected-slot');
+            const tile = selectedSlot.dom.querySelector('.tile');
+            if(tile) tile.classList.remove('selected-tile');
+            selectedSlot = null;
+        }
+
+        // --- Validation & Win Condition ---
+        function attemptMove(fromSlot, toSlot) {
+    let success = false;
+    let fromContent = fromSlot.content;
+    let toContent = toSlot.content;
+    if (toSlot.type === 'deck') {
+        // To deck, always allow
+        saveState();
+        swapSlots(fromSlot, toSlot);
+        success = true;
+    } else {
+        // To board
+        if (validateMove(fromContent, toSlot)) {
+            if (toContent) {
+                if (fromSlot.type === 'board') {
+                    // Check for valid swap with temporary swap to handle adjacent cases correctly
+                    const temp = fromSlot.content;
+                    fromSlot.content = toSlot.content;
+                    toSlot.content = temp;
+                    const validNew = validateMove(toSlot.content, toSlot);
+                    const validRev = validateMove(fromSlot.content, fromSlot);
+                    // Revert temp swap
+                    fromSlot.content = toContent;
+                    toSlot.content = fromContent;
+                    if (validNew && validRev) {
+                        saveState();
+                        swapSlots(fromSlot, toSlot);
+                        success = true;
+                    } else {
+                        // NEW: If reverse validation fails, displace the existing tile to an empty deck slot
+                        const emptyDeck = slots.find(s => s.type === 'deck' && s.content === null);
+                        if (emptyDeck) {
+                            saveState();
+                            // Move toContent (existing in target) to empty deck
+                            emptyDeck.content = toContent;
+                            // Move fromContent to toSlot
+                            toSlot.content = fromContent;
+                            // Clear fromSlot
+                            fromSlot.content = null;
+                            // Update DOM for all affected slots
+                            emptyDeck.dom.innerHTML = '';
+                            if (emptyDeck.content) emptyDeck.dom.appendChild(createTileDOM(emptyDeck.content));
+                            toSlot.dom.innerHTML = '';
+                            if (toSlot.content) toSlot.dom.appendChild(createTileDOM(toSlot.content));
+                            fromSlot.dom.innerHTML = '';
+                            if (fromSlot.content) fromSlot.dom.appendChild(createTileDOM(fromSlot.content));
+                            success = true;
+                        }
+                        // If no empty deck (rare edge case), falls through to failure/shake
+                    }
+                } else {
+                    // From deck to occupied board: only checked incoming
+                    saveState();
+                    swapSlots(fromSlot, toSlot);
+                    success = true;
+                }
+            } else {
+                // To empty board: checked
+                saveState();
+                swapSlots(fromSlot, toSlot);
+                success = true;
+            }
         }
     }
+    if (success) {
+        redoStack = [];
+        deselectSlot();
+        checkWin();
+    } else {
+        const tile = fromSlot.dom.querySelector('.tile');
+        if(tile) {
+            tile.classList.add('shake');
+            setTimeout(()=> tile.classList.remove('shake'), 300);
+        }
+    }
+}
 
-    // Add listener for resizing to update UI labels if needed (e.g., orientation change)
-    window.addEventListener('resize', updateDropdownLabels);
-    
-    // Init
-    updateDropdownLabels();
-    startNewGame();
-</script>
+        function validateMove(tileContent, targetSlot) {
+            if(!tileContent) return true;
+            const nTop = getNeighbor(targetSlot, 0, -1);
+            const nBot = getNeighbor(targetSlot, 0, 1);
+            const nLeft = getNeighbor(targetSlot, -1, 0);
+            const nRight = getNeighbor(targetSlot, 1, 0);
+            if (nTop && nTop.content && nTop.content.vals[2] !== tileContent.vals[0]) return false;
+            if (nBot && nBot.content && nBot.content.vals[0] !== tileContent.vals[2]) return false;
+            if (nLeft && nLeft.content && nLeft.content.vals[1] !== tileContent.vals[3]) return false;
+            if (nRight && nRight.content && nRight.content.vals[3] !== tileContent.vals[1]) return false;
+            return true;
+        }
+
+        function getNeighbor(slot, dx, dy) {
+            if(slot.type !== 'board') return null;
+            const nx = slot.x + dx;
+            const ny = slot.y + dy;
+            if(nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize) return null;
+            return slots.find(s => s.type === 'board' && s.x === nx && s.y === ny);
+        }
+
+        function swapSlots(s1, s2) {
+            const tmp = s1.content;
+            s1.content = s2.content;
+            s2.content = tmp;
+            // Re-render contents inside existing DOM nodes
+            s1.dom.innerHTML = '';
+            if(s1.content) s1.dom.appendChild(createTileDOM(s1.content));
+            s2.dom.innerHTML = '';
+            if(s2.content) s2.dom.appendChild(createTileDOM(s2.content));
+        }
+
+        function autoSolve() {
+            if(!gameActive || isPaused) return;
+            isAutoSolved = true;
+            moveHistory = [];
+            slots.forEach(s => s.content = null);
+            tiles.forEach(t => {
+                const target = slots.find(s => s.type === 'board' && s.index === t.correctSlot);
+                target.content = t;
+            });
+            renderSlots();
+            showToast("Solved.");
+            gameActive = false;
+            clearInterval(timerInt);
+        }
+
+        function checkWin() {
+            if(isAutoSolved) return;
+            const boardSlots = slots.filter(s => s.type === 'board');
+            if (boardSlots.every(s => s.content !== null)) {
+                gameActive = false;
+                clearInterval(timerInt);
+                if (hasUsedHint) {
+                    document.querySelector('#win-modal h1').innerText = "SOLVED";
+                    document.querySelector('#win-modal h1').style.color = "#4fc3f7";
+                } else {
+                    winCount++;
+                    document.getElementById('win-count').innerText = "W: " + winCount;
+                    document.querySelector('#win-modal h1').innerText = "VICTORY!";
+                    document.querySelector('#win-modal h1').style.color = "#66bb6a";
+                }
+                document.getElementById('final-time').innerText = "Time: " + document.getElementById('timer').innerText;
+                winModal.style.display = 'flex';
+            }
+        }
+
+        // Add listener for resizing to update UI labels if needed (e.g., orientation change)
+        window.addEventListener('resize', updateDropdownLabels);
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(adjustGridSizes, 100);
+        });
+
+        // Init
+        updateDropdownLabels();
+        startNewGame();
+    </script>
 </body>
 </html>
